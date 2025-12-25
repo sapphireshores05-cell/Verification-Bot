@@ -12,7 +12,7 @@ const client = new Client({
   partials: [Partials.GuildMember]
 });
 
-const TOKEN = process.env.BOT_TOKEN;
+const TOKEN = process.env.BOT_TOKEN; // token from .env
 const UNVERIFIED_ROLE_NAME = "UNVERIFIED";
 const CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const MAX_TIME = 72 * 60 * 60 * 1000; // 72 hours
@@ -105,3 +105,4 @@ client.on("shardError", console.error);
 
 // Login
 client.login(TOKEN);
+
