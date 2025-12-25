@@ -1,7 +1,9 @@
+require('dotenv').config(); // Load environment variables
 const { Client, GatewayIntentBits, Partials, PermissionsBitField } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 
+// Create Discord client
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -10,7 +12,7 @@ const client = new Client({
   partials: [Partials.GuildMember]
 });
 
-const TOKEN = "YOUR_TOKEN_HERE";
+const TOKEN = process.env.BOT_TOKEN;
 const UNVERIFIED_ROLE_NAME = "UNVERIFIED";
 const CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const MAX_TIME = 72 * 60 * 60 * 1000; // 72 hours
@@ -34,9 +36,16 @@ function saveTimestamps() {
   fs.writeFileSync(DATA_FILE, JSON.stringify(obj, null, 2));
 }
 
+// Ready event
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
-  setInterval(checkUnverifiedMembers, CHECK_INTERVAL);
+  setInterval(async () => {
+    try {
+      await checkUnverifiedMembers();
+    } catch (err) {
+      console.error("Error in checkUnverifiedMembers:", err);
+    }
+  }, CHECK_INTERVAL);
 });
 
 // Auto-assign UNVERIFIED role on join
@@ -49,7 +58,7 @@ client.on("guildMemberAdd", async member => {
   }
 });
 
-// Track role changes for existing members
+// Track role changes
 client.on("guildMemberUpdate", (oldMember, newMember) => {
   const role = newMember.guild.roles.cache.find(r => r.name === UNVERIFIED_ROLE_NAME);
   if (!role) return;
@@ -67,7 +76,7 @@ client.on("guildMemberUpdate", (oldMember, newMember) => {
   }
 });
 
-// Kick members who have had the UNVERIFIED role too long
+// Kick unverified members
 async function checkUnverifiedMembers() {
   for (const guild of client.guilds.cache.values()) {
     await guild.members.fetch();
@@ -90,4 +99,9 @@ async function checkUnverifiedMembers() {
   }
 }
 
+// Catch client errors
+client.on("error", console.error);
+client.on("shardError", console.error);
+
+// Login
 client.login(TOKEN);
